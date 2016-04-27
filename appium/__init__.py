@@ -7,7 +7,7 @@ import copy
 from subprocess import Popen, PIPE, STDOUT
 from threading import Thread
 
-from utils import get_free_port, run_command
+from utils import run_command
 
 
 LOG_DIR = "logs"
@@ -43,7 +43,6 @@ class AppiumNode(object):
         command = [
             self.appium_executable,
             "--port", str(self.port),
-            "--bootstrap-port", str(get_free_port()),
             "--udid", self.device.name]
 
         if self.additional_args:
