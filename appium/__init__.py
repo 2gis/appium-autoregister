@@ -22,16 +22,18 @@ class AppiumNode(object):
     if appium_executable is None:
         exit('set $APPIUM_EXECUTABLE to path of appium executable')
 
-    def __init__(self, appium_port, device, config_file=None, additional_args=None):
+    def __init__(self, appium_port, device, config_file=None, generate_bootstrap_port=True, additional_args=None):
         self.appium_port = appium_port
-        self.bootstrap_port = get_free_port()
         self.device = device
         self.config_file = config_file
+        self.generate_bootstrap_port = generate_bootstrap_port
         self.additional_args = additional_args
         self.log = logging.getLogger(self.device.name)
         if not os.path.exists(LOG_DIR):
             os.makedirs(LOG_DIR)
         self.logfile = os.sep.join([LOG_DIR, device.name])
+        if self.generate_bootstrap_port:
+            self.bootstrap_port = get_free_port()
 
     def to_json(self):
         _json = copy.copy(self.__dict__)
@@ -44,8 +46,10 @@ class AppiumNode(object):
         command = [
             self.appium_executable,
             "--port", str(self.appium_port),
-            "--bootstrap-port", str(self.bootstrap_port),
             "--udid", self.device.name]
+
+        if self.generate_bootstrap_port:
+            command += ["--bootstrap-port", str(self.bootstrap_port)]
 
         if self.additional_args:
             command += self.additional_args
