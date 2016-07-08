@@ -46,7 +46,9 @@ class AppiumNode(object):
         command = [
             self.appium_executable,
             "--port", str(self.appium_port),
-            "--udid", self.device.name]
+            "--udid", self.device.name,
+            "--suppress-adb-kill-server"
+        ]
 
         if self.generate_bootstrap_port:
             command += ["--bootstrap-port", str(self.bootstrap_port)]
