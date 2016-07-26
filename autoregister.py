@@ -1,5 +1,6 @@
 # coding: utf-8
 import argparse
+import json
 import logging
 import tempfile
 import signal
@@ -23,28 +24,29 @@ class StopAutoregister(Exception):
 class Autoregister(object):
     nodes = list()
 
-    config_template = Template("""
+    configuration_template = Template("""
     {
-        "capabilities": [{
-            "browserName": "$browserName",
-            "version": "$version",
-            "maxInstances": 1,
-            "platformName": "$platform",
-            "deviceName": "$device"
-        }],
-        "configuration": {
-            "cleanUpCycle": 2000,
-            "timeout": 30000,
-            "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
-            "url": "http://$appium_host:$appium_port/wd/hub",
-            "host": "$appium_host",
-            "port": $appium_port,
-            "maxSession": 1,
-            "register": true,
-            "registerCycle": 5000,
-            "hubPort": $grid_port,
-            "hubHost": "$grid_host"
-        }
+        "cleanUpCycle": 2000,
+        "timeout": 30000,
+        "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
+        "url": "http://$appium_host:$appium_port/wd/hub",
+        "host": "$appium_host",
+        "port": $appium_port,
+        "maxSession": 1,
+        "register": true,
+        "registerCycle": 5000,
+        "hubPort": $grid_port,
+        "hubHost": "$grid_host"
+    }
+    """)
+    capabilities_template = Template("""
+    {
+        "browserName": "$browserName",
+        "version": "$browserVersion",
+        "maxInstances": 1,
+        "platformName": "$platformName",
+        "platformVersion": "$platformVersion",
+        "deviceName": "$deviceName"
     }
     """)
 
@@ -94,15 +96,26 @@ class Autoregister(object):
             self.stop()
 
     def generate_config(self, device, appium_port):
-        return self.config_template.substitute({
-            "browserName": device.model,
-            "version": device.version,
-            "platform": device.platform,
-            "device": device.name,
+        capabilities = []
+        for browser in device.browsers:
+            capabilities.append(
+                json.loads(self.capabilities_template.substitute({
+                    "deviceName": device.name,
+                    "platformName": device.platform,
+                    "platformVersion": device.version,
+                    "browserName": browser,
+                    "browserVersion": "",
+                }))
+            )
+        configuration = json.loads(self.configuration_template.substitute({
             "appium_host": self.appium_host,
             "appium_port": appium_port,
             "grid_host": self.grid_host,
             "grid_port": self.grid_port,
+        }))
+        return json.dumps({
+          'capabilities': capabilities,
+          'configuration': configuration
         })
 
     def stop(self):

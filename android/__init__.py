@@ -10,6 +10,10 @@ import sys
 ENCODING = sys.getdefaultencoding()
 
 
+def get_command_output(p):
+    return p.stdout.read().decode(ENCODING).strip()
+
+
 class Adb(object):
     android_home = environ.get("ANDROID_HOME", None)
     if android_home is None:
@@ -34,12 +38,15 @@ class Adb(object):
 
     @classmethod
     def devices(cls):
-        p = cls._popen(["devices"])
-        return p
+        return cls._popen(["devices"]).stdout.readlines()
 
     def getprop(self, prop=""):
         p = self._popen(["-s", self.device_name, "shell", "getprop", prop])
-        return p.stdout.read().decode(ENCODING).strip()
+        return get_command_output(p)
+
+    def pm_list_has_package(self, package):
+        p = self._popen(["-s", self.device_name, "shell", "pm", "list", "packages", package])
+        return get_command_output(p)
 
 
 class Device(object):
@@ -50,6 +57,7 @@ class Device(object):
         self.version = self.adb.getprop("ro.build.version.release")
         self.model = self.adb.getprop("ro.product.model")
         self.uuid = self.adb.getprop("emu.uuid")
+        self.browsers = self.get_browsers()
 
     def __str__(self):
         return "<%s %s %s emu.uuid=%s>" % (self.name, self.platform, self.version, self.uuid)
@@ -59,12 +67,17 @@ class Device(object):
         del _json['adb']
         return _json
 
+    def get_browsers(self):
+        browsers = list()
+        if self.adb.pm_list_has_package("com.android.chrome"):
+            browsers.append("chrome")
+        if not browsers:
+            browsers.append("")
+        return browsers
+
 
 def android_devices():
-    p = Adb.devices()
-    devices = p.stdout.readlines()
-
-    for line in devices:
+    for line in Adb.devices():
         try:
             device_name, state = line.decode(ENCODING).split()
         except ValueError:
