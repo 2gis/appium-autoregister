@@ -95,7 +95,7 @@ class Autoregister(object):
 
     def generate_config(self, device, appium_port):
         return self.config_template.substitute({
-            "browserName": device.model,
+            "browserName": device.browser,
             "version": device.version,
             "platform": device.platform,
             "device": device.name,

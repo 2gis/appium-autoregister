@@ -41,6 +41,10 @@ class Adb(object):
         p = self._popen(["-s", self.device_name, "shell", "getprop", prop])
         return p.stdout.read().decode(ENCODING).strip()
 
+    def check_package(self, package):
+        p = self._popen(["-s", self.device_name, "shell", "pm", "list", "packages", package])
+        return p.stdout.read().decode(ENCODING).strip()
+
 
 class Device(object):
     def __init__(self, name, platform):
@@ -50,6 +54,7 @@ class Device(object):
         self.version = self.adb.getprop("ro.build.version.release")
         self.model = self.adb.getprop("ro.product.model")
         self.uuid = self.adb.getprop("emu.uuid")
+        self.browser = self.get_browser()
 
     def __str__(self):
         return "<%s %s %s emu.uuid=%s>" % (self.name, self.platform, self.version, self.uuid)
@@ -58,6 +63,12 @@ class Device(object):
         _json = copy.copy(self.__dict__)
         del _json['adb']
         return _json
+
+    def get_browser(self):
+        if self.adb.check_package("com.android.chrome"):
+            return "chrome"
+        else:
+            return "unknown"
 
 
 def android_devices():
