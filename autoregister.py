@@ -98,7 +98,7 @@ class Autoregister(object):
             "browserName": device.browser,
             "version": device.version,
             "platform": device.platform,
-            "device": device.name,
+            "device": device.model,
             "appium_host": self.appium_host,
             "appium_port": appium_port,
             "grid_host": self.grid_host,
