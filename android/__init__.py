@@ -76,19 +76,20 @@ class Device(object):
         return browsers
 
 
-def android_devices():
+def android_device_names():
     for line in Adb.devices():
         try:
             device_name, state = line.decode(ENCODING).split()
         except ValueError:
             device_name, state = None, None
         if state == "device":
-            yield Device(device_name, "ANDROID")
+            yield device_name
 
 
 def find_device_by_uuid(uuid):
-    for device in android_devices():
-        if device.uuid == uuid:
-            return device
+    for device_name in android_device_names():
+        device_uuid = Adb(device_name)
+        if device_uuid == uuid:
+            return Device(device_name, "ANDROID")
 
     return None
