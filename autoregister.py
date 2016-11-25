@@ -8,7 +8,7 @@ import time
 from string import Template
 
 
-from android import android_devices
+from android import android_device_names, Device
 from utils import get_free_port
 from appium import AppiumNode
 
@@ -62,7 +62,8 @@ class Autoregister(object):
     def stop_signal(signum, frame):
         raise StopAutoregister()
 
-    def register(self, device):
+    def register(self, device_name, device_platform="ANDROID"):
+        device = Device(device_name, device_platform)
         config_file = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         port = get_free_port()
         config = self.generate_config(device, port)
@@ -81,12 +82,12 @@ class Autoregister(object):
         try:
             while True:
                 known_devices = {node.device.name: node for node in self.nodes}
-                for device in android_devices():
-                    if device.name in known_devices.keys():
-                        del known_devices[device.name]
+                for device_name in android_device_names():
+                    if device_name in known_devices.keys():
+                        del known_devices[device_name]
                         continue
 
-                    self.register(device)
+                    self.register(device_name)
 
                 for node in known_devices.values():
                     self.unregister(node)
