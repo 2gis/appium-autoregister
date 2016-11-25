@@ -56,11 +56,10 @@ class Device(object):
         self.adb = Adb(self.name)
         self.version = self.adb.getprop("ro.build.version.release")
         self.model = self.adb.getprop("ro.product.model")
-        self.uuid = self.adb.getprop("emu.uuid")
         self.browsers = self.get_browsers()
 
     def __str__(self):
-        return "<%s %s %s emu.uuid=%s>" % (self.name, self.platform, self.version, self.uuid)
+        return "<%s %s %s>" % (self.name, self.platform, self.version)
 
     def to_json(self):
         _json = copy.copy(self.__dict__)
@@ -84,12 +83,3 @@ def android_device_names():
             device_name, state = None, None
         if state == "device":
             yield device_name
-
-
-def find_device_by_uuid(uuid):
-    for device_name in android_device_names():
-        device_uuid = Adb(device_name)
-        if device_uuid == uuid:
-            return Device(device_name, "ANDROID")
-
-    return None
