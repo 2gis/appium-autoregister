@@ -71,26 +71,24 @@ class AppiumNode(object):
         log.info("process started with pid %s" % self.process.pid)
         return self.process
 
-    @asyncio.coroutine
-    def start_coro(self):
+    async def start_coro(self):
         if self.process is not None:
             return self.process
 
         log.info("starting appium node for %s" % self.device)
-        self.process = yield from run_command(self._command, wait_end=False)
-        yield from self.process.stdout.read(1)
-        asyncio.async(self._write_stdout())
+        self.process = await run_command(self._command, wait_end=False)
+        await self.process.stdout.read(1)
+        asyncio.ensure_future(self._write_stdout())
         if self.process.returncode:
-            log.warning((yield from self.process.communicate()))
+            log.warning((await self.process.communicate()))
         log.info("process started with pid %s" % self.process.pid)
         return self.process
 
-    @asyncio.coroutine
-    def _write_stdout(self):
+    async def _write_stdout(self):
         with open(self.logfile, "wb") as fd:
             while self.process.returncode is None and\
                     not self.process.stdout.at_eof():
-                line = yield from self.process.stdout.readline()
+                line = await self.process.stdout.readline()
                 if line:
                     fd.write(line)
 
@@ -105,8 +103,7 @@ class AppiumNode(object):
             os.remove(self.config_file)
         log.info("appium node for %s stopped" % self.device)
 
-    @asyncio.coroutine
-    def delete(self):
+    async def delete(self):
         self.stop()
 
     def _log_process_stdout(self):
