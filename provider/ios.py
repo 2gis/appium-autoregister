@@ -61,3 +61,7 @@ class iDeviceIdUtil:
 
     def devices(self):
         return self._get_device_list()
+
+
+if __name__ == "__main__":
+    print(iDeviceIdUtil().devices())
