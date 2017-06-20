@@ -4,32 +4,6 @@ from subprocess import Popen, PIPE
 from provider.base import Provider, Device
 
 
-class IosProvider(Provider):
-    def __init__(self, idevice_id_class=iDeviceIdUtil, device_class=IosDevice):
-        self.idevice_id = idevice_id_class()
-        self.IosDevice = device_class
-
-    def device_names(self):
-        for udid in self.idevice_id.devices():
-            yield udid
-
-    def get_device(self, name):
-        return self.IosDevice(name)
-
-
-class IosDevice(Device):
-    def __init__(self, name, platform="IOS"):
-        self.name = name
-        self.platform = platform
-
-        # self.version = self.adb.getprop("ro.build.version.release")
-        # self.model = self.adb.getprop("ro.product.model")
-        # self.browsers = self.get_browsers()
-
-    def get_browsers(self):
-        return ["safari"]
-
-
 class iDeviceIdUtil:
 
     _list_devices_command = ["idevice_id", "--list"]
@@ -61,6 +35,32 @@ class iDeviceIdUtil:
 
     def devices(self):
         return self._get_device_list()
+
+
+class IosDevice(Device):
+    def __init__(self, name, platform="IOS"):
+        self.name = name
+        self.platform = platform
+
+        # self.version = self.adb.getprop("ro.build.version.release")
+        # self.model = self.adb.getprop("ro.product.model")
+        # self.browsers = self.get_browsers()
+
+    def get_browsers(self):
+        return ["safari"]
+
+
+class IosProvider(Provider):
+    def __init__(self, idevice_id_class=iDeviceIdUtil, device_class=IosDevice):
+        self.idevice_id = idevice_id_class()
+        self.IosDevice = device_class
+
+    def device_names(self):
+        for udid in self.idevice_id.devices():
+            yield udid
+
+    def get_device(self, name):
+        return self.IosDevice(name)
 
 
 if __name__ == "__main__":

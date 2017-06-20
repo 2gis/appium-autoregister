@@ -9,8 +9,6 @@ import time
 from string import Template
 
 
-from provider.android import AndroidProvider
-from provider.ios import IosProvider
 from utils import get_free_port
 from appium import AppiumNode
 
@@ -54,7 +52,7 @@ class Autoregister(object):
     nodes = list()
 
     def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, additional_args,
-                 provider_class=AndroidProvider):
+                 provider_class):
         self.grid_host = grid_host
         self.grid_port = grid_port
         self.appium_host = appium_host
@@ -149,7 +147,7 @@ if __name__ == "__main__":
                         help='Additional arguments to appium, when it starts.'
                              ' Arguments should be separated by ",".'
                              ' Default no additional arguments passing')
-    parser.add_argument("--ios", type=bool)
+    parser.add_argument("--ios", action='store_true', default=False)
 
     args = parser.parse_args()
 

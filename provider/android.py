@@ -40,5 +40,5 @@ class AndroidProvider(Provider):
             if state == "device":
                 yield device_name
 
-    def get_device(self, name, platform="ANDROID"):
-        return self.AndroidDevice(name, platform)
+    def get_device(self, name):
+        return self.AndroidDevice(name)
