@@ -52,6 +52,7 @@ class IosDevice(Device):
         self.name = name
         self.platform = platform
         self.browsers = self.get_browsers()
+        self.version = "unknown"
 
     def get_browsers(self):
         return ["safari"]
