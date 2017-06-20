@@ -26,9 +26,7 @@ class iDeviceIdUtil:
     def _execute_command(self, command):
         process = self._run_process(command)
         if process.returncode == 0:
-            return self.bytes_to_str(
-                process.stdout.readlines()
-            )
+            return process.stdout.readlines()
         else:
             raise Exception("Cannot execute command {}. Stderr:{}".format(
                 command, process.stderr.readlines())
@@ -36,7 +34,7 @@ class iDeviceIdUtil:
 
     def _get_device_list(self):
         try:
-            return self._execute_command(self._list_devices_command)
+            return [self.bytes_to_str(i) for i in self._execute_command(self._list_devices_command)]
         except FileNotFoundError:
             log.error("Seems idevice_id is not installed. Cannot get device list")
             exit(1)
