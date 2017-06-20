@@ -9,7 +9,7 @@ import time
 from string import Template
 
 
-from provider import AndroidProvider
+from provider.android import AndroidProvider
 from utils import get_free_port
 from appium import AppiumNode
 
