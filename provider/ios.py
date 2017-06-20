@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from subprocess import Popen, PIPE
 from provider.base import Provider, Device
+
+
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger("autoregister")
 
 
 class iDeviceIdUtil:
@@ -30,7 +35,13 @@ class iDeviceIdUtil:
             )
 
     def _get_device_list(self):
-        self._execute_command(self._list_devices_command)
+        try:
+            res = self._execute_command(self._list_devices_command)
+        except FileNotFoundError:
+            log.error("Seems idevice_id is not installed. Cannot get device list")
+            exit(1)
+
+        print(res)
         return []
 
     def devices(self):
