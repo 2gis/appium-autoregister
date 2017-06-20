@@ -1,4 +1,5 @@
 # coding: utf-8
+
 import argparse
 import json
 import logging
@@ -8,7 +9,7 @@ import time
 from string import Template
 
 
-from android import android_device_names, Device
+from provider import AndroidProvider
 from utils import get_free_port
 from appium import AppiumNode
 
@@ -21,55 +22,61 @@ class StopAutoregister(Exception):
     pass
 
 
+configuration_template = Template("""
+{
+    "cleanUpCycle": 2000,
+    "timeout": 30000,
+    "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
+    "url": "http://$appium_host:$appium_port/wd/hub",
+    "host": "$appium_host",
+    "port": $appium_port,
+    "maxSession": 1,
+    "register": true,
+    "registerCycle": 5000,
+    "hubPort": $grid_port,
+    "hubHost": "$grid_host"
+}
+""")
+capabilities_template = Template("""
+{
+    "browserName": "$browserName",
+    "version": "$browserVersion",
+    "maxInstances": 1,
+    "platformName": "$platformName",
+    "platformVersion": "$platformVersion",
+    "deviceName": "$deviceName"
+}
+""")
+
+
 class Autoregister(object):
     nodes = list()
 
-    configuration_template = Template("""
-    {
-        "cleanUpCycle": 2000,
-        "timeout": 30000,
-        "proxy": "org.openqa.grid.selenium.proxy.DefaultRemoteProxy",
-        "url": "http://$appium_host:$appium_port/wd/hub",
-        "host": "$appium_host",
-        "port": $appium_port,
-        "maxSession": 1,
-        "register": true,
-        "registerCycle": 5000,
-        "hubPort": $grid_port,
-        "hubHost": "$grid_host"
-    }
-    """)
-    capabilities_template = Template("""
-    {
-        "browserName": "$browserName",
-        "version": "$browserVersion",
-        "maxInstances": 1,
-        "platformName": "$platformName",
-        "platformVersion": "$platformVersion",
-        "deviceName": "$deviceName"
-    }
-    """)
-
-    def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, additional_args):
+    def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, additional_args,
+                 provider_class=AndroidProvider):
         self.grid_host = grid_host
         self.grid_port = grid_port
         self.appium_host = appium_host
         self.generate_bootstrap_port = generate_bootstrap_port
         self.additional_args = additional_args
+        self.provider = provider_class()
         signal.signal(signal.SIGTERM, self.stop_signal)
 
     @staticmethod
     def stop_signal(signum, frame):
         raise StopAutoregister()
 
-    def register(self, device_name, device_platform="ANDROID"):
-        device = Device(device_name, device_platform)
+    def create_tmp_config(self, device, port):
         config_file = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        port = get_free_port()
         config = self.generate_config(device, port)
         config_file.write(config)
         config_file.flush()
-        node = AppiumNode(port, device, config_file.name, self.generate_bootstrap_port, self.additional_args)
+        return config_file.name
+
+    def register(self, device):
+        port = get_free_port()
+        config_path = self.create_tmp_config(device, port)
+        node = AppiumNode(port, device, config_path, self.generate_bootstrap_port, self.additional_args)
         node.start()
         self.nodes.append(node)
 
@@ -82,12 +89,13 @@ class Autoregister(object):
         try:
             while True:
                 known_devices = {node.device.name: node for node in self.nodes}
-                for device_name in android_device_names():
+                for device_name in self.provider.device_names():
                     if device_name in known_devices.keys():
                         del known_devices[device_name]
                         continue
 
-                    self.register(device_name)
+                    device = self.provider.get_device(device_name)
+                    self.register(device)
 
                 for node in known_devices.values():
                     self.unregister(node)
@@ -100,7 +108,7 @@ class Autoregister(object):
         capabilities = []
         for browser in device.browsers:
             capabilities.append(
-                json.loads(self.capabilities_template.substitute({
+                json.loads(capabilities_template.substitute({
                     "deviceName": device.name,
                     "platformName": device.platform,
                     "platformVersion": device.version,
@@ -108,7 +116,7 @@ class Autoregister(object):
                     "browserVersion": "",
                 }))
             )
-        configuration = json.loads(self.configuration_template.substitute({
+        configuration = json.loads(configuration_template.substitute({
             "appium_host": self.appium_host,
             "appium_port": appium_port,
             "grid_host": self.grid_host,
@@ -142,10 +150,16 @@ if __name__ == "__main__":
                              ' Default no additional arguments passing')
 
     args = parser.parse_args()
+
     additional_args = None
     if args.additional_args:
         additional_args = args.additional_args.split(',')
-    generate_bootstrap_port = not args.disable_bootstrap_port_generation
-    autoregister = Autoregister(args.grid_host, args.grid_port, args.appium_host,
-                                generate_bootstrap_port, additional_args)
+
+    autoregister = Autoregister(
+        grid_host=args.grid_host,
+        grid_port=args.grid_port,
+        appium_host=args.appium_host,
+        generate_bootstrap_port=(not args.disable_bootstrap_port_generation),
+        additional_args=additional_args
+    )
     autoregister.run()

@@ -49,7 +49,7 @@ class Adb(object):
         return get_command_output(p)
 
 
-class Device(object):
+class AndroidDevice(object):
     def __init__(self, name, platform):
         self.name = name
         self.platform = platform
