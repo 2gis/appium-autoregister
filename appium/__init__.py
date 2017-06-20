@@ -34,7 +34,7 @@ class AppiumNode:
         self.additional_args = additional_args
 
         self.log = logging.getLogger(self.device.name)
-        os.makedirs(LOG_DIR, exist_ok=False)
+        os.makedirs(LOG_DIR, exist_ok=True)
         self.logfile = os.sep.join([LOG_DIR, device.name])
 
         if self.generate_bootstrap_port:
