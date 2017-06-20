@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import asyncio
+import json
 import os
 import logging
 import copy
@@ -46,7 +47,8 @@ class AppiumNode(object):
         command = [
             self.appium_executable,
             "--port", str(self.appium_port),
-            "--udid", self.device.name]
+            "--default-capabilities", json.dumps({"udid": self.device.name})
+        ]
 
         if self.generate_bootstrap_port:
             command += ["--bootstrap-port", str(self.bootstrap_port)]
