@@ -15,7 +15,7 @@ LOG_DIR = "logs"
 log = logging.getLogger(__name__)
 
 
-class AppiumNode(object):
+class AppiumNode:
     process = None
     process_reader = None
 

@@ -48,7 +48,7 @@ capabilities_template = Template("""
 """)
 
 
-class Autoregister(object):
+class Autoregister:
     nodes = list()
 
     def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, generate_wda_local_port, additional_args,
@@ -76,7 +76,7 @@ class Autoregister(object):
     def register(self, device):
         port = get_free_port()
         config_path = self.create_tmp_config(device, port)
-        node = AppiumNode(port, device, config_path, self.generate_bootstrap_port, selfgenerate_wda_local_port,
+        node = AppiumNode(port, device, config_path, self.generate_bootstrap_port, self.generate_wda_local_port,
                           self.additional_args)
         node.start()
         self.nodes.append(node)
