@@ -36,13 +36,10 @@ class iDeviceIdUtil:
 
     def _get_device_list(self):
         try:
-            res = self._execute_command(self._list_devices_command)
+            return self._execute_command(self._list_devices_command)
         except FileNotFoundError:
             log.error("Seems idevice_id is not installed. Cannot get device list")
             exit(1)
-
-        print(res)
-        return []
 
     def devices(self):
         return self._get_device_list()
@@ -52,10 +49,7 @@ class IosDevice(Device):
     def __init__(self, name, platform="IOS"):
         self.name = name
         self.platform = platform
-
-        # self.version = self.adb.getprop("ro.build.version.release")
-        # self.model = self.adb.getprop("ro.product.model")
-        # self.browsers = self.get_browsers()
+        self.browsers = self.get_browsers()
 
     def get_browsers(self):
         return ["safari"]
@@ -72,7 +66,3 @@ class IosProvider(Provider):
 
     def get_device(self, name):
         return self.IosDevice(name)
-
-
-if __name__ == "__main__":
-    print(iDeviceIdUtil().devices())
