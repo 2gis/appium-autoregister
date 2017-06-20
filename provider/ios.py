@@ -38,7 +38,7 @@ class iDeviceIdUtil:
 
     def _get_device_list(self):
         try:
-            return [self.bytes_to_str(i) for i in self._execute_command(self._list_devices_command)]
+            return [self.bytes_to_str(i.strip()) for i in self._execute_command(self._list_devices_command)]
         except FileNotFoundError:
             log.error("Seems idevice_id is not installed. Cannot get device list")
             exit(1)
