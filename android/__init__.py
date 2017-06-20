@@ -1,11 +1,13 @@
 # coding: utf-8
 
-from os import environ, path
-from subprocess import Popen, PIPE
-import logging
-import copy
 
 import sys
+import copy
+import logging
+
+from os import environ, path
+from subprocess import Popen, PIPE
+
 
 ENCODING = sys.getdefaultencoding()
 
