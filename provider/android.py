@@ -8,24 +8,6 @@ from provider.adb import Adb
 ENCODING = sys.getdefaultencoding()
 
 
-class AndroidProvider(Provider):
-    def __init__(self, adb_class=Adb, device_class=AndroidDevice):
-        self.Adb = adb_class
-        self.AndroidDevice = device_class
-
-    def device_names(self):
-        for line in self.Adb.devices():
-            try:
-                device_name, state = line.decode(ENCODING).split()
-            except ValueError:
-                device_name, state = None, None
-            if state == "device":
-                yield device_name
-
-    def get_device(self, name, platform="ANDROID"):
-        return self.AndroidDevice(name, platform)
-
-
 class AndroidDevice(Device):
     def __init__(self, name, platform):
         self.name = name
@@ -42,3 +24,21 @@ class AndroidDevice(Device):
         if not browsers:
             browsers.append("")
         return browsers
+
+
+class AndroidProvider(Provider):
+    def __init__(self, adb_class=Adb, device_class=AndroidDevice):
+        self.Adb = adb_class
+        self.AndroidDevice = device_class
+
+    def device_names(self):
+        for line in self.Adb.devices():
+            try:
+                device_name, state = line.decode(ENCODING).split()
+            except ValueError:
+                device_name, state = None, None
+            if state == "device":
+                yield device_name
+
+    def get_device(self, name, platform="ANDROID"):
+        return self.AndroidDevice(name, platform)
