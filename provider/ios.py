@@ -27,11 +27,11 @@ class iDeviceIdUtil:
         process = self._run_process(command)
         if process.returncode == 0:
             return self.bytes_to_str(
-                process.stdout.readlines().strip()
+                process.stdout.readlines()
             )
         else:
             raise Exception("Cannot execute command {}. Stderr:{}".format(
-                command, process.stderr.readlines().strip())
+                command, process.stderr.readlines())
             )
 
     def _get_device_list(self):
