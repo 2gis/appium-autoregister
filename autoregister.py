@@ -51,12 +51,13 @@ capabilities_template = Template("""
 class Autoregister(object):
     nodes = list()
 
-    def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, additional_args,
+    def __init__(self, grid_host, grid_port, appium_host, generate_bootstrap_port, generate_wda_local_port, additional_args,
                  provider_class):
         self.grid_host = grid_host
         self.grid_port = grid_port
         self.appium_host = appium_host
         self.generate_bootstrap_port = generate_bootstrap_port
+        self.generate_wda_local_port = generate_wda_local_port
         self.additional_args = additional_args
         self.provider = provider_class()
         signal.signal(signal.SIGTERM, self.stop_signal)
@@ -75,7 +76,8 @@ class Autoregister(object):
     def register(self, device):
         port = get_free_port()
         config_path = self.create_tmp_config(device, port)
-        node = AppiumNode(port, device, config_path, self.generate_bootstrap_port, self.additional_args)
+        node = AppiumNode(port, device, config_path, self.generate_bootstrap_port, selfgenerate_wda_local_port,
+                          self.additional_args)
         node.start()
         self.nodes.append(node)
 
@@ -140,14 +142,16 @@ if __name__ == "__main__":
                         help='Selenium grid port register to. Default 4444.')
     parser.add_argument('--appium-host', type=str, dest='appium_host', default="localhost",
                         help='This machine host, to be discovered from grid. Default localhost.')
-    parser.add_argument('--disable-bootstrap-port-generation', action='store_true', default=False,
-                        help='Disable generating random free port for and providing it'
-                             ' to Appium with --bootstrap-port parameter.')
     parser.add_argument('--additional-args', type=str, dest='additional_args', default='',
                         help='Additional arguments to appium, when it starts.'
                              ' Arguments should be separated by ",".'
                              ' Default no additional arguments passing')
+    parser.add_argument('--disable-bootstrap-port-generation', action='store_true', default=False,
+                        help='ANDROID ONLY: Disable generating random free port for and providing it'
+                             ' to Appium with --bootstrap-port parameter.')
     parser.add_argument("--ios", action='store_true', default=False)
+    parser.add_argument("--disable-wda-local-port-generation", action="store_true", default=False,
+                        help='iOS ONLY: Disable generating random free wdaLocalPort for each Appium node')
 
     args = parser.parse_args()
 
@@ -165,6 +169,7 @@ if __name__ == "__main__":
         grid_port=args.grid_port,
         appium_host=args.appium_host,
         generate_bootstrap_port=(not args.disable_bootstrap_port_generation),
+        generate_wda_local_port=(not args.disable_wda_local_port_generation),
         additional_args=additional_args,
         provider_class=ProviderClass
     )

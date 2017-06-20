@@ -23,18 +23,25 @@ class AppiumNode(object):
     if appium_executable is None:
         exit('set $APPIUM_EXECUTABLE to path of appium executable')
 
-    def __init__(self, appium_port, device, config_file=None, generate_bootstrap_port=True, additional_args=None):
+    def __init__(self, appium_port, device, config_file=None, generate_bootstrap_port=True,
+                 generate_wda_local_port=True, additional_args=None):
         self.appium_port = appium_port
         self.device = device
         self.config_file = config_file
+
         self.generate_bootstrap_port = generate_bootstrap_port
+        self.generate_wda_local_port = generate_wda_local_port
         self.additional_args = additional_args
+
         self.log = logging.getLogger(self.device.name)
-        if not os.path.exists(LOG_DIR):
-            os.makedirs(LOG_DIR)
+        os.makedirs(LOG_DIR, exist_ok=False)
         self.logfile = os.sep.join([LOG_DIR, device.name])
+
         if self.generate_bootstrap_port:
             self.bootstrap_port = get_free_port()
+
+        if self.generate_wda_local_port:
+            self.wda_local_port = get_free_port()
 
     def to_json(self):
         _json = copy.copy(self.__dict__)
@@ -44,10 +51,15 @@ class AppiumNode(object):
 
     @property
     def _command(self):
+        default_caps = {"udid": self.device.name}
+
+        if self.generate_wda_local_port:
+            default_caps["wdaLocalPort"] = self.wda_local_port
+
         command = [
             self.appium_executable,
             "--port", str(self.appium_port),
-            "--default-capabilities", json.dumps({"udid": self.device.name})
+            "--default-capabilities", json.dumps(default_caps)
         ]
 
         if self.generate_bootstrap_port:
