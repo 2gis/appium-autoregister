@@ -157,12 +157,17 @@ if __name__ == "__main__":
     if args.additional_args:
         additional_args = args.additional_args.split(',')
 
+    if args.ios:
+        from provider.ios import IosProvider as ProviderClass
+    else:
+        from provider.android import AndroidProvider as ProviderClass
+
     autoregister = Autoregister(
         grid_host=args.grid_host,
         grid_port=args.grid_port,
         appium_host=args.appium_host,
         generate_bootstrap_port=(not args.disable_bootstrap_port_generation),
         additional_args=additional_args,
-        provider_class=(IosProvider if args.ios else AndroidProvider)
+        provider_class=ProviderClass
     )
     autoregister.run()
