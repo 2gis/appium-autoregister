@@ -1,8 +1,9 @@
 # coding: utf-8
 
 
+import os
 import sys
-import copy
+import asyncio
 import logging
 
 from os import environ, path
@@ -10,6 +11,41 @@ from subprocess import Popen, PIPE
 
 
 ENCODING = sys.getdefaultencoding()
+
+log = logging.getLogger(__name__)
+
+
+async def adb_command(device, params, asynchronous=False):
+    assert device is not None
+
+    if isinstance(params, str):
+        params = params.split(" ")
+
+    android_home = os.environ.get("ANDROID_HOME", None)
+    if android_home is not None:
+        adb = os.path.join(android_home, 'platform-tools', 'adb')
+    else:
+        # if we don't have ANDROID_HOME set, let's just hope adb is in PATH
+        adb = 'adb'
+    command = [adb, '-s', device, '-H', 'localhost'] + params
+    p = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        env=os.environ.copy())
+    setattr(p, 'command', command)
+    if not asynchronous:
+        await p.wait()
+    return p
+
+
+async def until_adb_output(device_name, command, result):
+    _result = None
+    while _result != result:
+        _process = await adb_command(device_name, command)
+        _result = (await _process.stdout.read()).strip()
+
+    _process = await adb_command(device_name, command)
+    log.info("%s is %s" % (" ".join(_process.command), result))
 
 
 def get_command_output(p):
@@ -49,39 +85,3 @@ class Adb(object):
     def pm_list_has_package(self, package):
         p = self._popen(["-s", self.device_name, "shell", "pm", "list", "packages", package])
         return get_command_output(p)
-
-
-class AndroidDevice(object):
-    def __init__(self, name, platform):
-        self.name = name
-        self.platform = platform
-        self.adb = Adb(self.name)
-        self.version = self.adb.getprop("ro.build.version.release")
-        self.model = self.adb.getprop("ro.product.model")
-        self.browsers = self.get_browsers()
-
-    def __str__(self):
-        return "<%s %s %s>" % (self.name, self.platform, self.version)
-
-    def to_json(self):
-        _json = copy.copy(self.__dict__)
-        del _json['adb']
-        return _json
-
-    def get_browsers(self):
-        browsers = list()
-        if self.adb.pm_list_has_package("com.android.chrome"):
-            browsers.append("chrome")
-        if not browsers:
-            browsers.append("")
-        return browsers
-
-
-def android_device_names():
-    for line in Adb.devices():
-        try:
-            device_name, state = line.decode(ENCODING).split()
-        except ValueError:
-            device_name, state = None, None
-        if state == "device":
-            yield device_name
