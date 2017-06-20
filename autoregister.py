@@ -10,6 +10,7 @@ from string import Template
 
 
 from provider.android import AndroidProvider
+from provider.ios import IosProvider
 from utils import get_free_port
 from appium import AppiumNode
 
@@ -148,6 +149,7 @@ if __name__ == "__main__":
                         help='Additional arguments to appium, when it starts.'
                              ' Arguments should be separated by ",".'
                              ' Default no additional arguments passing')
+    parser.add_argument("--ios", type=bool)
 
     args = parser.parse_args()
 
@@ -160,6 +162,7 @@ if __name__ == "__main__":
         grid_port=args.grid_port,
         appium_host=args.appium_host,
         generate_bootstrap_port=(not args.disable_bootstrap_port_generation),
-        additional_args=additional_args
+        additional_args=additional_args,
+        provider_class=(IosProvider if args.ios else AndroidProvider)
     )
     autoregister.run()
