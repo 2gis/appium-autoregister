@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import logging
 from subprocess import Popen, PIPE
 from provider.base import Provider, Device
+
+
+ENCODING = sys.getdefaultencoding()
 
 
 logging.basicConfig(level=logging.DEBUG)
