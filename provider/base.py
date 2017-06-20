@@ -7,7 +7,7 @@ class Provider:
     def device_names(self):
         raise NotImplementedError
 
-    def get_device(self, name, platform="ANDROID"):
+    def get_device(self, name):
         raise NotImplementedError
 
 

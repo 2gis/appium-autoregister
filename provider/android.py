@@ -9,7 +9,7 @@ ENCODING = sys.getdefaultencoding()
 
 
 class AndroidDevice(Device):
-    def __init__(self, name, platform):
+    def __init__(self, name, platform="ANDROID"):
         self.name = name
         self.platform = platform
         self.adb = Adb(self.name)
